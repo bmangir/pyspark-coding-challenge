@@ -1,5 +1,8 @@
 from pyspark.sql import functions as F, Window
 
+from src.config import ACTION_CLICK, ACTION_ATC, ACTION_ORD
+
+
 class Transformer:
     def __init__(self, name: str):
         self.name = name
@@ -14,17 +17,17 @@ class Transformer:
         return df
 
     def prepare_clicks(self, df):
-        return df.withColumn("action_type", F.lit(1)) \
+        return df.withColumn("action_type", F.lit(ACTION_CLICK)) \
             .withColumnRenamed("item_id", "action_item_id") \
             .withColumnRenamed("click_time", "action_time")
 
     def prepare_add_to_carts(self, df):
-        return df.withColumn("action_type", F.lit(2)) \
+        return df.withColumn("action_type", F.lit(ACTION_ATC)) \
             .withColumnRenamed("config_id", "action_item_id") \
             .withColumnRenamed("occurred_at", "action_time")
 
     def prepare_previous_orders(self, df):
-        return df.withColumn("action_type", F.lit(3)) \
+        return df.withColumn("action_type", F.lit(ACTION_ORD)) \
             .withColumnRenamed("config_id", "action_item_id") \
             .withColumnRenamed("order_date", "action_time")
 
