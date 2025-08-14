@@ -2,6 +2,7 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType, 
 
 
 # Define action types as constants
+ACTION_NONE = 0
 ACTION_CLICK = 1
 ACTION_ATC = 2
 ACTION_ORD = 3
