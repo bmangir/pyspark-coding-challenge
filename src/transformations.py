@@ -29,6 +29,7 @@ class Transformer:
             .withColumnRenamed("click_time", "action_time") \
             .select("customer_id", "action_item_id", "action_time", "action_type")
 
+        # Filter for the last year from reference date
         filtered_df = renamed_df.filter(F.col("action_time") >= self.reference_date)
 
         return filtered_df
@@ -39,6 +40,7 @@ class Transformer:
             .withColumnRenamed("occurred_at", "action_time") \
             .select("customer_id", "action_item_id", "action_time", "action_type")
 
+        # Filter for the last year from reference date
         filtered_df = renamed_df.filter(F.col("action_time") >= self.reference_date)
 
         return filtered_df
@@ -49,7 +51,8 @@ class Transformer:
             .withColumnRenamed("order_date", "action_time") \
             .select("customer_id", "action_item_id", "action_time", "action_type")
 
-        filtered_df = renamed_df.filter(F.col("action_time") >= F.date_sub(F.current_date(), self.days)) \
+        # Filter for the last year from reference date
+        filtered_df = renamed_df.filter(F.col("action_time") >= self.reference_date)
 
         return filtered_df
 
