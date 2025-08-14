@@ -22,6 +22,25 @@ class Transformer:
 
         self.reference_date = F.date_sub(F.lit(impression_dates), self.days)
         return df
+    
+    def __explode_impressions__(self, df):
+        """
+        Explode impressions array so each row represents a single impression item
+        """
+        exploded_df = df.select(
+            "dt",
+            "customer_id", 
+            "ranking_id",
+            F.explode("impressions").alias("impression_item")
+        ).select(
+            "dt",
+            "customer_id",
+            "ranking_id", 
+            F.col("impression_item.item_id").alias("item_id"),
+            F.col("impression_item.is_order").alias("is_order")
+        )
+        
+        return exploded_df
 
     def __prepare_clicks__(self, df):
         renamed_df = df.withColumn("action_type", F.lit(ACTION_CLICK)) \
