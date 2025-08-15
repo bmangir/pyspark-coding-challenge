@@ -153,3 +153,13 @@ class Transformer:
         )
         
         return final_df
+
+    def save(self, df, path, format="parquet", mode="overwrite"):
+        """
+        Save DataFrame to specified path in given format
+        :param df: DataFrame to save
+        :param path: Path to save the DataFrame
+        :param format: Format to save the DataFrame (default is parquet)
+        :param mode: Save mode (default is overwrite)
+        """
+        df.write.mode(mode).format(format).save(path)

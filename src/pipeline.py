@@ -31,6 +31,12 @@ def main(target_date=None, verbose=True):
         final_df.printSchema()
         print("Final DataFrame Sample:")
         final_df.show(5)
+
+    transformer.save(
+        final_df,
+        "data/final_data.parquet",
+        format="parquet",
+        mode="overwrite")
     
     return final_df
 
