@@ -114,6 +114,26 @@ class TestTransformer(unittest.TestCase):
         for row in rows:
             self.assertEqual(row.action_type, ACTION_ORD)
 
+    def test_build_action_history(self):
+        """Test building unified action history"""
+        self.transformer.__prepare_impressions__(self.impressions_df)
+
+        clicks_df = self.transformer.__prepare_clicks__(self.clicks_df)
+        carts_df = self.transformer.__prepare_add_to_carts__(self.carts_df)
+        orders_df = self.transformer.__prepare_previous_orders__(self.orders_df)
+
+        actions_df = self.transformer.build_action_history(clicks_df, carts_df, orders_df)
+
+        # Must have all actions combined
+        total_expected = clicks_df.count() + carts_df.count() + orders_df.count()
+        self.assertEqual(actions_df.count(), total_expected)
+
+        # Check that having the all action types
+        action_types = [row.action_type for row in actions_df.collect()]
+        self.assertIn(ACTION_CLICK, action_types)
+        self.assertIn(ACTION_ATC, action_types)
+        self.assertIn(ACTION_ORD, action_types)
+
 
 if __name__ == '__main__':
     unittest.main()
