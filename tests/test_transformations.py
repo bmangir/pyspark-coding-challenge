@@ -65,6 +65,55 @@ class TestTransformer(unittest.TestCase):
         self.assertEqual(first_row.ranking_id, expected_ranking)
         self.assertEqual(first_row.is_order, expected_is_order)
 
+    def test_prepare_clicks(self):
+        """Test clicks data preparation"""
+        self.transformer.__prepare_impressions__(self.impressions_df)
+
+        prepared_clicks = self.transformer.__prepare_clicks__(self.clicks_df)
+
+        # Check schema
+        expected_columns = ["customer_id", "action_item_id", "action_time", "action_type"]
+        self.assertEqual(prepared_clicks.columns, expected_columns)
+
+        # Check action type
+        rows = prepared_clicks.collect()
+        for row in rows:
+            self.assertEqual(row.action_type, ACTION_CLICK)
+
+        # Check data transformation
+        self.assertIn("customer_id", prepared_clicks.columns)
+        self.assertIn("action_item_id", prepared_clicks.columns)
+
+    def test_prepare_add_to_carts(self):
+        """Test add to carts data preparation"""
+        self.transformer.__prepare_impressions__(self.impressions_df)
+
+        prepared_carts = self.transformer.__prepare_add_to_carts__(self.carts_df)
+
+        # Check schema
+        expected_columns = ["customer_id", "action_item_id", "action_time", "action_type"]
+        self.assertEqual(prepared_carts.columns, expected_columns)
+
+        # Check action type
+        rows = prepared_carts.collect()
+        for row in rows:
+            self.assertEqual(row.action_type, ACTION_ATC)
+
+    def test_prepare_previous_orders(self):
+        """Test previous orders data preparation"""
+        self.transformer.__prepare_impressions__(self.impressions_df)
+
+        prepared_orders = self.transformer.__prepare_previous_orders__(self.orders_df)
+
+        # Check schema
+        expected_columns = ["customer_id", "action_item_id", "action_time", "action_type"]
+        self.assertEqual(prepared_orders.columns, expected_columns)
+
+        # Check action type
+        rows = prepared_orders.collect()
+        for row in rows:
+            self.assertEqual(row.action_type, ACTION_ORD)
+
 
 if __name__ == '__main__':
     unittest.main()
