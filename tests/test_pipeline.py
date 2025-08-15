@@ -226,6 +226,41 @@ class TestPipelineIntegration(unittest.TestCase):
             for action_type in types_seq:
                 self.assertIn(action_type, valid_action_types)
 
+    def test_daily_breakdown_functionality(self):
+        """Test that daily breakdown works for training iteration"""
+
+        impressions_df, clicks_df, carts_df, orders_df = create_test_dataframes(self.spark)
+
+        from src.transformations import Transformer
+
+        # Test processing different days
+        dates_to_test = ["2024-12-15", "2024-12-16"]
+        daily_results = {}
+
+        for date in dates_to_test:
+            filtered_impressions = impressions_df.filter(impressions_df.dt == date)
+            daily_results[date] = []
+
+            if filtered_impressions.count() > 0:
+                transformer = Transformer("TestTransformer", n_actions=10, days=365)
+                (prep_impressions, prep_clicks, prep_carts, prep_orders) = transformer.prepare_data(
+                    filtered_impressions, clicks_df, carts_df, orders_df)
+
+                actions_df = transformer.build_action_history(prep_clicks, prep_carts, prep_orders)
+                final_df = transformer.join_impressions_with_actions(actions_df, prep_impressions, MAX_ACTIONS=10)
+
+                daily_results[date] = final_df.collect()
+
+        # Validate daily results
+        self.assertIn("2024-12-15", daily_results)
+        self.assertIn("2024-12-16", daily_results)
+
+        # 2024-12-15 should have 2 samples (customer 1: items 101, 102)
+        self.assertEqual(len(daily_results["2024-12-15"]), 2)
+
+        # 2024-12-16 should have 4 samples (customer 1: items 103, 104 + customer 2: items 105, 106)
+        self.assertEqual(len(daily_results["2024-12-16"]), 4)
+
 
 if __name__ == '__main__':
     unittest.main()
