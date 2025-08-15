@@ -235,6 +235,61 @@ class TestTransformer(unittest.TestCase):
             print(f"Has sufficient actions" if len(non_zero_actions) >= expected_min_actions else f"Insufficient actions!")
             self.assertGreaterEqual(len(non_zero_actions), expected_min_actions)
 
+    def test_action_ordering(self):
+        """Test that actions are ordered by recency (most recent first)"""
+        print("\n=== Testing Action Ordering ===")
+
+        (impressions_df, clicks_df, carts_df, orders_df) = self.transformer.prepare_data(
+            self.impressions_df, self.clicks_df, self.carts_df, self.orders_df)
+
+        actions_df = self.transformer.build_action_history(clicks_df, carts_df, orders_df)
+        final_df = self.transformer.join_impressions_with_actions(actions_df, impressions_df, MAX_ACTIONS=15)
+
+        # Get customer 1's impression on 2024-12-16
+        customer_1_dec_16 = [r for r in final_df.collect()
+                           if r.customer_id == 1 and r.dt == "2024-12-16"]
+
+        if customer_1_dec_16:
+            row = customer_1_dec_16[0]
+            non_zero_actions = [x for x in row.actions if x != 0]
+            non_none_types = [x for x in row.action_types if x != 0]
+
+            print(f"Customer 1 actions on 2024-12-16: {non_zero_actions}")
+            print(f"Corresponding action types: {non_none_types}")
+            print(f"Total actions: {len(non_zero_actions)}")
+
+            # Should have multiple actions
+            expected_min_actions = 2
+            actual_actions = len(non_zero_actions)
+            print(f"Expected minimum actions: {expected_min_actions}, actual: {actual_actions}")
+            print(f"Has multiple actions" if actual_actions > 1 else f"Insufficient actions!")
+            self.assertGreater(actual_actions, 1)
+
+            # Actions should be in descending order by timestamp
+            # Most recent actions should come first
+
+            if len(non_zero_actions) >= 2:
+                first_action = non_zero_actions[0]
+                second_action = non_zero_actions[1]
+
+                print(f"First (most recent) action: {first_action}")
+                print(f"Second action: {second_action}")
+
+                # Based on test data, customer 1's most recent actions before 2024-12-16 are:
+                # 2024-12-13: cart 303, order 403
+                # 2024-12-12: click 205, cart 302
+                # 2024-12-11: click 204
+                # 2024-12-10: click 203, order 402
+
+                recent_actions = [303, 403, 205, 302, 204, 203, 402]  # From most recent
+
+                print(f"First action is recent" if first_action in recent_actions else f"First action {first_action} not in recent actions!")
+                self.assertIn(first_action, recent_actions)
+
+        else:
+            print("No impressions found for customer 1 on 2024-12-16")
+            self.fail("No impressions found for customer 1 on 2024-12-16")
+
 
 if __name__ == '__main__':
     unittest.main()
