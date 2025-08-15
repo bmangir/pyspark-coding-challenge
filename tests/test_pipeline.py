@@ -185,6 +185,47 @@ class TestPipelineIntegration(unittest.TestCase):
             print(f"Action progression correct" if len(dec_16_actions) >= len(dec_15_actions) else f"Action progression incorrect!")
             self.assertGreaterEqual(len(dec_16_actions), len(dec_15_actions))
 
+    def test_pytorch_compatibility(self):
+        """Test that output format is compatible with PyTorch model signature"""
+
+        impressions_df, clicks_df, carts_df, orders_df = create_test_dataframes(self.spark)
+
+        from src.transformations import Transformer
+
+        transformer = Transformer("TestTransformer", n_actions=1000, days=365)
+        (impressions_df, clicks_df, carts_df, orders_df) = transformer.prepare_data(
+            impressions_df, clicks_df, carts_df, orders_df)
+
+        actions_df = transformer.build_action_history(clicks_df, carts_df, orders_df)
+        final_df = transformer.join_impressions_with_actions(actions_df, impressions_df, MAX_ACTIONS=1000)
+
+        # Simulate creating PyTorch tensors
+        results = final_df.collect()
+
+        # Extract data in PyTorch format
+        impressions_batch = [row.item_id for row in results]        # [batch_size]
+        actions_batch = [row.actions for row in results]            # [batch_size, 1000]
+        action_types_batch = [row.action_types for row in results]  # [batch_size, 1000]
+
+        # Validate shapes
+        batch_size = len(results)
+        self.assertEqual(len(impressions_batch), batch_size)
+        self.assertEqual(len(actions_batch), batch_size)
+        self.assertEqual(len(action_types_batch), batch_size)
+
+        # Each sequence should be exactly 1000 elements
+        for actions_seq, types_seq in zip(actions_batch, action_types_batch):
+            self.assertEqual(len(actions_seq), 1000)
+            self.assertEqual(len(types_seq), 1000)
+
+        # Validate action types are within expected range
+        from src.config import ACTION_NONE, ACTION_CLICK, ACTION_ATC, ACTION_ORD
+        valid_action_types = {ACTION_NONE, ACTION_CLICK, ACTION_ATC, ACTION_ORD}
+
+        for types_seq in action_types_batch:
+            for action_type in types_seq:
+                self.assertIn(action_type, valid_action_types)
+
 
 if __name__ == '__main__':
     unittest.main()
