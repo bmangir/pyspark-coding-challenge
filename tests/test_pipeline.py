@@ -91,5 +91,19 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(actual_other, 0)
 
 
+class TestPipelineIntegration(unittest.TestCase):
+    """Integration tests that test the actual pipeline logic without mocking"""
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up Spark session for all tests"""
+        cls.spark = create_test_spark_session()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up Spark session"""
+        cls.spark.stop()
+
+
 if __name__ == '__main__':
     unittest.main()
