@@ -49,5 +49,47 @@ class TestPipeline(unittest.TestCase):
         # Should have 12 training samples (exploded impressions)
         self.assertEqual(result_df.count(), 12)
 
+    @patch('src.pipeline.read_json')
+    @patch('src.pipeline.SparkSession.builder')
+    def test_process_daily_training_data_with_date_filter(self, mock_spark_builder, mock_read_json):
+        """Test daily training data function with date filter"""
+        print("\n=== Testing Daily Data Filter ===")
+
+        mock_spark = MagicMock()
+        mock_spark_builder.appName.return_value.getOrCreate.return_value = mock_spark
+
+        mock_read_json.side_effect = [
+            self.impressions_df,
+            self.clicks_df,
+            self.carts_df,
+            self.orders_df
+        ]
+
+        # Test with date filter for 2024-12-15
+        target_date = "2024-12-15"
+        print(f"Filtering for date: {target_date}")
+
+        with patch('builtins.print'):
+            result_df = main(target_date)
+
+        all_rows = result_df.collect()
+        filtered_rows = [r for r in all_rows if r.dt == target_date]
+        other_date_rows = [r for r in all_rows if r.dt != target_date]
+
+        expected_filtered = 2  # Customer 1 has 2 impressions on 2024-12-15
+        actual_filtered = len(filtered_rows)
+        actual_other = len(other_date_rows)
+
+        print(f"Expected impressions for {target_date}: {expected_filtered}")
+        print(f"Actual impressions for {target_date}: {actual_filtered}")
+        print(f"Impressions for other dates: {actual_other}")
+
+        print(f"Correct filter count" if actual_filtered == expected_filtered else f"Filter count mismatch!")
+        print(f"No other dates" if actual_other == 0 else f"Found {actual_other} rows from other dates!")
+
+        self.assertEqual(actual_filtered, expected_filtered)
+        self.assertEqual(actual_other, 0)
+
+
 if __name__ == '__main__':
     unittest.main()
