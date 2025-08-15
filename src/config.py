@@ -1,4 +1,4 @@
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType, ArrayType, BooleanType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType, ArrayType, BooleanType, DateType
 
 
 # Define action types as constants
@@ -36,7 +36,7 @@ impression_schema = StructType([
 ])
 
 order_schema = StructType([
-    StructField("order_date", StringType(), True),
+    StructField("order_date", DateType(), True),
     StructField("customer_id", IntegerType(), False),
     StructField("config_id", IntegerType(), False),
     StructField("simple_id", IntegerType(), False),

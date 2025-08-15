@@ -67,7 +67,7 @@ class Transformer:
     def __prepare_previous_orders__(self, df):
         renamed_df = df.withColumn("action_type", F.lit(ACTION_ORD)) \
             .withColumnRenamed("config_id", "action_item_id") \
-            .withColumnRenamed("order_date", "action_time") \
+            .withColumn("action_time", F.col("order_date").cast("timestamp")) \
             .select("customer_id", "action_item_id", "action_time", "action_type")
 
         # Filter for the last year from reference date
