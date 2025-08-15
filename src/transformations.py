@@ -1,7 +1,7 @@
 from pyspark.sql import functions as F, Window
 import datetime
 
-from src.config import ACTION_CLICK, ACTION_ATC, ACTION_ORD
+from src.config import ACTION_CLICK, ACTION_ATC, ACTION_ORD, ACTION_NONE
 
 
 class Transformer:
@@ -91,5 +91,65 @@ class Transformer:
     def build_action_history(self, clicks_df, carts_df, orders_df):
         return clicks_df.unionByName(carts_df).unionByName(orders_df)
 
-    def join_impressions_with_actions(self):
-        pass
+    def join_impressions_with_actions(self, actions_df, impressions_df, MAX_ACTIONS=1000):
+        exploded_impressions = self.__explode_impressions__(impressions_df)
+        
+        # Convert dates to proper format for comparison
+        exploded_impressions = exploded_impressions.withColumn("impression_date", F.to_date("dt"))
+        actions_df = actions_df.withColumn("action_date", F.to_date("action_time"))
+        
+        # For each impression, actions are needed which are occurred before that impression date
+        # action_date < impression_date
+        joined_df = exploded_impressions.alias("imp").join(
+            actions_df.alias("act"),
+            (F.col("imp.customer_id") == F.col("act.customer_id")) &
+            (F.col("act.action_date") < F.col("imp.impression_date")),
+            "left"
+        )
+        
+        # For each impression, rank actions by recency and take top 1000 (MAX_ACTIONS)
+        window_spec = Window.partitionBy("imp.customer_id", "imp.dt", "imp.ranking_id", "imp.item_id") \
+                           .orderBy(F.col("act.action_time").desc())
+        
+        ranked_actions = joined_df.withColumn("action_rank", F.row_number().over(window_spec)) \
+                                .filter((F.col("action_rank") <= MAX_ACTIONS) | F.col("action_rank").isNull())
+
+        grouped_actions = ranked_actions.groupBy(
+            "imp.dt", "imp.customer_id", "imp.ranking_id", "imp.item_id", "imp.is_order"
+        ).agg(
+            F.collect_list("act.action_item_id").alias("actions"),
+            F.collect_list("act.action_type").alias("action_types")
+        )
+
+        def pad_array(col, pad_value):
+            """ Pad arrays to exactly MAX_ACTIONS length """
+            return F.when(
+                F.size(col) < MAX_ACTIONS,
+                F.concat(col, F.array_repeat(F.lit(pad_value), MAX_ACTIONS - F.size(col)))
+            ).otherwise(F.slice(col, 1, MAX_ACTIONS))
+        
+        # Handle null arrays (customers with no actions)
+        final_df = grouped_actions.withColumn(
+            "actions", 
+            F.when(F.col("actions").isNull(), 
+                   F.array_repeat(F.lit(0), MAX_ACTIONS))
+             .otherwise(pad_array(F.col("actions"), F.lit(0)))
+        ).withColumn(
+            "action_types",
+            F.when(F.col("action_types").isNull(),
+                   F.array_repeat(F.lit(ACTION_NONE), MAX_ACTIONS))
+             .otherwise(pad_array(F.col("action_types"), F.lit(ACTION_NONE)))
+        )
+        
+        # Rename columns to match the expected output
+        final_df = final_df.select(
+            F.col("dt"),
+            F.col("customer_id"), 
+            F.col("ranking_id"),
+            F.col("item_id"),
+            F.col("is_order"),
+            F.col("actions"),
+            F.col("action_types")
+        )
+        
+        return final_df
