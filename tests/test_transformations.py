@@ -134,6 +134,47 @@ class TestTransformer(unittest.TestCase):
         self.assertIn(ACTION_ATC, action_types)
         self.assertIn(ACTION_ORD, action_types)
 
+    def test_join_impressions_with_actions_schema(self):
+        """Test final join produces correct schema"""
+        (impressions_df, clicks_df, carts_df, orders_df) = self.transformer.prepare_data(
+            self.impressions_df, self.clicks_df, self.carts_df, self.orders_df)
+
+        actions_df = self.transformer.build_action_history(clicks_df, carts_df, orders_df)
+        final_df = self.transformer.join_impressions_with_actions(actions_df, impressions_df)
+
+        # Check schema
+        expected_columns = ["dt", "customer_id", "ranking_id", "item_id", "is_order", "actions", "action_types"]
+        self.assertEqual(final_df.columns, expected_columns)
+
+        # Check that we have exploded impressions (12 rows)
+        self.assertEqual(final_df.count(), 12)
+
+    def test_join_impressions_with_actions_data_format(self):
+        """Test that final data has correct format for PyTorch"""
+        (impressions_df, clicks_df, carts_df, orders_df) = self.transformer.prepare_data(
+            self.impressions_df, self.clicks_df, self.carts_df, self.orders_df)
+
+        actions_df = self.transformer.build_action_history(clicks_df, carts_df, orders_df)
+        final_df = self.transformer.join_impressions_with_actions(actions_df, impressions_df, MAX_ACTIONS=10)
+
+        rows = final_df.collect()
+
+        for row in rows:
+            # Check actions array is exactly 10 elements (padded)
+            self.assertEqual(len(row.actions), 10)
+            self.assertEqual(len(row.action_types), 10)
+
+            # Check padding values
+            actions_list = row.actions
+            action_types_list = row.action_types
+
+            # Count non-zero actions
+            non_zero_actions = [x for x in actions_list if x != 0]
+            non_none_types = [x for x in action_types_list if x != ACTION_NONE]
+
+            # Should have same number of non-zero actions and non-none types
+            self.assertEqual(len(non_zero_actions), len(non_none_types))
+
 
 if __name__ == '__main__':
     unittest.main()
