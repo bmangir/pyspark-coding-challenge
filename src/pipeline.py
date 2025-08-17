@@ -7,7 +7,7 @@ from src.config import click_schema, add_to_cart_schema, impression_schema, orde
 from src.spark_config import create_optimized_spark_session, get_memory_estimates
 
 
-def main(target_date=None, verbose=True, prod_mode=False):
+def main(target_date=None, verbose=True, prod_mode=True):
     """
     Main entry point for the PySpark training pipeline.
     :param target_date:
@@ -16,7 +16,6 @@ def main(target_date=None, verbose=True, prod_mode=False):
     :return:
     """
 
-    # Use optimized Spark session for production
     if prod_mode:
         spark = create_optimized_spark_session("PySpark-Training-Pipeline-Production")
         if verbose:
