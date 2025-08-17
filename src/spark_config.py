@@ -26,10 +26,10 @@ def get_production_spark_config():
     
     # === RESOURCE ALLOCATION === #
     # Optimized for Databricks Standard_D16s_v3 or similar
-    conf.set("spark.executor.memory", "14g")           # High memory for window operations
-    conf.set("spark.executor.cores", "4")              # Balance parallelism vs overhead
-    conf.set("spark.executor.instances", "20")         # Scale based on cluster size
-    conf.set("spark.driver.memory", "8g")              # Driver coordinates large jobs
+    conf.set("spark.executor.memory", "8g")           # High memory for window operations
+    conf.set("spark.executor.cores", "4")             # Balance parallelism vs overhead
+    conf.set("spark.executor.instances", "100")       # Scale based on cluster size
+    conf.set("spark.driver.memory", "8g")             # Driver coordinates large jobs
     conf.set("spark.driver.cores", "2")
 
     # === MEMORY MANAGEMENT === #
