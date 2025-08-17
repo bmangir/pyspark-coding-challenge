@@ -4,12 +4,28 @@ from pyspark.sql import functions as F
 from src.transformations import Transformer
 from src.utils import read_json
 from src.config import click_schema, add_to_cart_schema, impression_schema, order_schema
+from src.spark_config import create_optimized_spark_session, get_memory_estimates
 
 
-def main(target_date=None, verbose=True):
-    spark = SparkSession.builder \
-        .appName("spark-job-0001") \
-        .getOrCreate()
+def main(target_date=None, verbose=True, prod_mode=False):
+    """
+    Main entry point for the PySpark training pipeline.
+    :param target_date:
+    :param verbose: enable verbose logging
+    :param prod_mode: if True, use production-optimized Spark session
+    :return:
+    """
+
+    # Use optimized Spark session for production
+    if prod_mode:
+        spark = create_optimized_spark_session("PySpark-Training-Pipeline-Production")
+        if verbose:
+            estimates = get_memory_estimates()
+            print("Memory estimates for production:")
+            for scale, details in estimates.items():
+                print(f"  {scale}: {details['memory_required']} - {details['processing_time']}")
+    else:
+        spark = SparkSession.builder.appName("spark-job-local").getOrCreate()
 
     impressions_df = read_json(spark, impression_schema, "data/impressions.json")
     clicks_df = read_json(spark, click_schema, "data/clicks.json")
