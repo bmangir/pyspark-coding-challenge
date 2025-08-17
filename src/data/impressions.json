@@ -1,0 +1,54 @@
+[
+  {
+    "dt": "2024-05-15",
+    "ranking_id": "12345",
+    "customer_id": 1,
+    "impressions": [
+      {
+        "item_id": 101,
+        "is_order": false
+      },
+      {
+        "item_id": 102,
+        "is_order": false
+      }
+    ]
+  },
+  {
+    "dt": "2024-05-16",
+    "ranking_id": "12346",
+    "customer_id": 1,
+    "impressions": [
+      {
+        "item_id": 103,
+        "is_order": true
+      }
+    ]
+  },
+  {
+    "dt": "2024-05-16",
+    "ranking_id": "12347",
+    "customer_id": 2,
+    "impressions": [
+      {
+        "item_id": 104,
+        "is_order": false
+      },
+      {
+        "item_id": 105,
+        "is_order": false
+      }
+    ]
+  },
+  {
+    "dt": "2024-05-17",
+    "ranking_id": "12348",
+    "customer_id": 1,
+    "impressions": [
+      {
+        "item_id": 106,
+        "is_order": false
+      }
+    ]
+  }
+]

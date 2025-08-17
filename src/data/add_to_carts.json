@@ -1,0 +1,30 @@
+[
+  {
+    "dt": "2024-05-14",
+    "customer_id": 1,
+    "config_id": 401,
+    "simple_id": 4001,
+    "occurred_at": "2024-05-14 12:30:00.000000000"
+  },
+  {
+    "dt": "2024-05-14",
+    "customer_id": 1,
+    "config_id": 402,
+    "simple_id": 4002,
+    "occurred_at": "2024-05-14 16:45:00.000000000"
+  },
+  {
+    "dt": "2024-05-15",
+    "customer_id": 1,
+    "config_id": 403,
+    "simple_id": 4003,
+    "occurred_at": "2024-05-15 10:15:00.000000000"
+  },
+  {
+    "dt": "2024-05-16",
+    "customer_id": 2,
+    "config_id": 404,
+    "simple_id": 4004,
+    "occurred_at": "2024-05-16 14:30:00.000000000"
+  }
+]

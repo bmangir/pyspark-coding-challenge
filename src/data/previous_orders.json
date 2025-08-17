@@ -1,0 +1,23 @@
+[
+  {
+    "order_date": "2024-05-13",
+    "customer_id": 1,
+    "config_id": 501,
+    "simple_id": 5001,
+    "occurred_at": "2024-05-13 18:00:00.000000000"
+  },
+  {
+    "order_date": "2024-05-14",
+    "customer_id": 1,
+    "config_id": 502,
+    "simple_id": 5002,
+    "occurred_at": "2024-05-14 20:30:00.000000000"
+  },
+  {
+    "order_date": "2024-05-15",
+    "customer_id": 2,
+    "config_id": 503,
+    "simple_id": 5003,
+    "occurred_at": "2024-05-15 19:15:00.000000000"
+  }
+]
